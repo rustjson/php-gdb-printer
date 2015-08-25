@@ -25,13 +25,10 @@ class PHPZvalPrinter():
 
     def to_string(self):
         if (self.val['u1']['type_info'] == 6): 
-            zval_str = self.val['value']['str']
+            zend_str = self.val['value']['str']
 
-            _str = ''
-            #for i in xrange(int(zval_str['len'])):
-            #    _str = _str + chr(int((zval_str['val'][i])))
-            _str = zval_str['val'].string('iso8859-1', 'ignore', int(zval_str['len']));
-            return "(IS_STRING) " +  _str
+            _str = zend_str['val'].string('iso8859-1', 'ignore', int(zval_str['len']));
+            return "[IS_STRING] " +  _str
         else:
             return 'NULL'
 
@@ -39,10 +36,6 @@ class PHPZvalPrinter():
         return 'zval'
 
 def zval_lookup_function (val):
-    #lookup_tag = val.type
-    #regex = re.compile (r'^zval *$')
-    #if regex.match (str(lookup_tag)):
-        #return PHPZvalPrinter (val)
     if str(val.type) == "zval *":
         return PHPZvalPrinter(val)
     return None
