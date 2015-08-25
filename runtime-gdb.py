@@ -10,7 +10,7 @@ import re
 import sys 
 #import gdb.printing
 
-print("Loading PHP Internal Debug Printer......", file=sys.stderr)
+print("Loading PHP Internal Debug Printer...DONE?", file=sys.stderr)
 
 #phpobjfile = gdb.current_objfile() or gdb.objfiles()[0]
 
@@ -27,7 +27,7 @@ class PHPZvalPrinter():
         if (self.val['u1']['type_info'] == 6): 
             zend_str = self.val['value']['str']
 
-            _str = zend_str['val'].string('iso8859-1', 'ignore', int(zval_str['len']));
+            _str = zend_str['val'].string('iso8859-1', 'ignore', int(zend_str['len']));
             return "[IS_STRING] " +  _str
         else:
             return 'NULL'
