@@ -34,6 +34,9 @@ class PHPZvalPrinter():
             zend_str = self.val['value']['str']
             return PHPZendStringPrinter(zend_str).to_string();
         
+        elif (self.val['u1']['v']['type'] == 7): 
+            return PHPHashTablePrinter(self.val['value']['arr']).to_string();
+        
         else:
             return 'NULL'
 
