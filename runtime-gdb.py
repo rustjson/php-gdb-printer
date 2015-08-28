@@ -8,13 +8,9 @@ Author: Jason Young <red.wolf.s.husband@gmail.com>
 from __future__ import print_function
 import re
 import sys 
-#import gdb.printing
 
 print("Loading PHP Internal Debug Printer...DONE?", file=sys.stderr)
 
-#phpobjfile = gdb.current_objfile() or gdb.objfiles()[0]
-
-#phpobjfile.pretty_printers = []
 
 
 class PHPZvalPrinter():
@@ -24,17 +20,19 @@ class PHPZvalPrinter():
         self.val = val;
 
     def to_string(self):
-        if (self.val['u1']['v']['type'] == 4):
+        ztype = self.val['u1']['v']['type'];
+
+        if (ztype == 4):
             return "[IS_LONG] " + str(self.val['value']['lval'])
         
-        elif (self.val['u1']['v']['type'] == 5):
+        elif (ztype == 5):
             return "[IS_DOUBLE] " + str(self.val['value']['dval'])
 
-        elif (self.val['u1']['v']['type'] == 6): 
+        elif (ztype == 6): 
             zend_str = self.val['value']['str']
             return PHPZendStringPrinter(zend_str).to_string();
         
-        elif (self.val['u1']['v']['type'] == 7): 
+        elif (ztype == 7): 
             return PHPHashTablePrinter(self.val['value']['arr']).to_string();
         
         else:
@@ -65,9 +63,18 @@ class PHPHashTablePrinter():
     def to_string(self):
         nNumOfElements = self.val['nNumOfElements'];
         nTableSize = self.val['nTableSize'];
-        _str = "{nNumUsed = " + str(self.val['nNumUsed']) + ", nNumOfElements = " + str(nNumOfElements) + ", nTableSize = "+ str(nTableSize) +"}\n";
+        nNumUsed = self.val['nNumUsed'];
 
-        for i in xrange(nNumOfElements):
+        _str = "{nNumUsed = " + str(nNumUsed) + ", nNumOfElements = " + str(nNumOfElements) + ", nTableSize = "+ str(nTableSize) +"}\n";
+
+        pNum = 0;
+        #only display 4 elements 
+        if (nNumOfElements >= 4):
+            pNum = 4;
+        else:
+            pNum = nNumOfElements;
+
+        for i in xrange(pNum):
             try:
                 key = self.val['arData'][i]['key']
                 val = self.val['arData'][i]['val']
