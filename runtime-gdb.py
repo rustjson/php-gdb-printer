@@ -37,13 +37,26 @@ class PHPZvalPrinter():
         
         elif (ztype == 10):#zend_reference
             zend_reference = self.val['value']['ref']
-            return "(IS_REFERENCE) {refcount=" + str(zend_reference['gc']['refcount']) + ", val={" + PHPZvalPrinter(zend_reference['val']).to_string()  + "}}";
-
+            return PHPZendReferencePrinter(zend_reference).to_string();
         else:
             return 'NULL'
 
     def display_hint(self):
         return 'zval *'
+
+class PHPZendReferencePrinter():
+    "print zend reference"
+
+    def __init__(self, val):
+        self.val = val;
+    
+    def to_string(self):
+        return "(IS_REFERENCE) {refcount=" + str(self.val['gc']['refcount']) + ", val={\n\t" + PHPZvalPrinter(self.val['val']).to_string()  + "\n}}";
+    
+    def display_hit(self):
+        "return zend_reference *"
+
+
 
 class PHPZendStringPrinter():
     "print a zend string"
@@ -60,7 +73,7 @@ class PHPZendStringPrinter():
             etc = "..."
        
         _str = self.val['val'].string('iso8859-1', 'ignore', len);
-        return "(IS_STRING) [" + _str + "...]"
+        return "(IS_STRING) {refcount=" + str(self.val['gc']['refcount']) + ", [" + _str + "...]}"
     
     def display_hint(self):
         return 'zend_string *'
