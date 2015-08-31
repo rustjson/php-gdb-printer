@@ -23,10 +23,10 @@ class PHPZvalPrinter():
         ztype = self.val['u1']['v']['type'];
 
         if (ztype == 4):
-            return "[IS_LONG] " + str(self.val['value']['lval'])
+            return "(IS_LONG) " + str(self.val['value']['lval'])
         
         elif (ztype == 5):
-            return "[IS_DOUBLE] " + str(self.val['value']['dval'])
+            return "(IS_DOUBLE) " + str(self.val['value']['dval'])
 
         elif (ztype == 6): 
             zend_str = self.val['value']['str']
@@ -35,6 +35,10 @@ class PHPZvalPrinter():
         elif (ztype == 7): 
             return PHPHashTablePrinter(self.val['value']['arr']).to_string();
         
+        elif (ztype == 10):#zend_reference
+            zend_reference = self.val['value']['ref']
+            return "(IS_REFERENCE) {refcount=" + str(zend_reference['gc']['refcount']) + ", val={" + PHPZvalPrinter(zend_reference['val']).to_string()  + "}}";
+
         else:
             return 'NULL'
 
@@ -46,10 +50,17 @@ class PHPZendStringPrinter():
 
     def __init__(self, val):
         self.val = val;
-
+    
+    #Still need to work on this. cause len is not actual string len
     def to_string(self):
-        _str = self.val['val'].string('iso8859-1', 'ignore', int(self.val['len']));
-        return "(IS_STRING) [" + _str + "]"
+        len = int(self.val['len'])
+
+        if len > 100:
+            len = 100
+            etc = "..."
+       
+        _str = self.val['val'].string('iso8859-1', 'ignore', len);
+        return "(IS_STRING) [" + _str + "...]"
     
     def display_hint(self):
         return 'zend_string *'
