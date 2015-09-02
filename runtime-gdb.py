@@ -35,6 +35,9 @@ class PHPZvalPrinter():
         elif (ztype == 7): 
             return PHPHashTablePrinter(self.val['value']['arr']).to_string();
         
+        elif (ztype == 8):#zend_object 
+            return PHPZendObjectPrinter(self.val['value']['obj']).to_string();
+
         elif (ztype == 10):#zend_reference
             zend_reference = self.val['value']['ref']
             return PHPZendReferencePrinter(zend_reference).to_string();
@@ -43,6 +46,30 @@ class PHPZvalPrinter():
 
     def display_hint(self):
         return 'zval *'
+
+class PHPZendObjectPrinter():
+    "print zend OBJECT"
+
+    def __init__(self, val):
+        self.val = val;
+    
+    def to_string(self):
+        return "(IS_OBJECT) {refcount=" + str(self.val['gc']['refcount']) + ", ce={\n\t" + PHPZendCEPrinter(self.val['ce']).to_string()  + "\n}, props={\n\t" +PHPHashTablePrinter(self.val['properties']).to_string() +"}\n}";
+    
+    def display_hit(self):
+        "return zend_reference *"
+
+class PHPZendCEPrinter():
+    "print zend_class_entry"
+
+    def __init__(self, val):
+        self.val = val;
+    
+    def to_string(self):
+        return "{name=" + PHPZendStringPrinter(self.val['name']).to_string() + "}";
+    
+    def display_hit(self):
+        "return zend_class_entry *"
 
 class PHPZendReferencePrinter():
     "print zend reference"
@@ -68,15 +95,37 @@ class PHPZendStringPrinter():
     def to_string(self):
         len = int(self.val['len'])
 
-        if len > 100:
-            len = 100
+        if len > 20:
+            len = 20
             etc = "..."
        
-        _str = self.val['val'].string('iso8859-1', 'ignore', len);
+        #_str = self.val['val'].string('iso8859-1', 'ignore', len);
+        #_str = "len = " + str(len);
+        _str = "" 
+        if (int(self.val['val'][0]) == 0):
+            _str += "nil";
+        else:
+            _str = self.val['val'].string('iso8859-1', 'ignore', len);
+
         return "(IS_STRING) {refcount=" + str(self.val['gc']['refcount']) + ", [" + _str + "...]}"
     
     def display_hint(self):
         return 'zend_string *'
+
+
+class PHPZendReferencePrinter():
+    "print zend reference"
+
+    def __init__(self, val):
+        self.val = val;
+    
+    def to_string(self):
+        return "(IS_REFERENCE) {refcount=" + str(self.val['gc']['refcount']) + ", val={\n\t" + PHPZvalPrinter(self.val['val']).to_string()  + "\n}}";
+    
+    def display_hit(self):
+        "return zend_reference *"
+
+
 
 class PHPHashTablePrinter():
     "print a zend hash table"
@@ -88,24 +137,28 @@ class PHPHashTablePrinter():
         nNumOfElements = self.val['nNumOfElements'];
         nTableSize = self.val['nTableSize'];
         nNumUsed = self.val['nNumUsed'];
+        try:
+            _str = "{nNumUsed = " + str(nNumUsed) + ", nNumOfElements = " + str(nNumOfElements) + ", nTableSize = "+ str(nTableSize) +"}\n";
 
-        _str = "{nNumUsed = " + str(nNumUsed) + ", nNumOfElements = " + str(nNumOfElements) + ", nTableSize = "+ str(nTableSize) +"}\n";
+            pNum = 0;
+            #only display 4 elements 
+            if (nNumOfElements >= 20):
+                pNum = 20;
+            else:
+                pNum = nNumOfElements;
+            _str += " try to print" + str(pNum)  + "elements";
 
-        pNum = 0;
-        #only display 4 elements 
-        if (nNumOfElements >= 4):
-            pNum = 4;
-        else:
-            pNum = nNumOfElements;
-
-        for i in xrange(pNum):
-            try:
-                key = self.val['arData'][i]['key']
-                val = self.val['arData'][i]['val']
-                _str += PHPZendStringPrinter(key).to_string() + " => "
-                _str += PHPZvalPrinter(val).to_string() + "\n"
-            except:
-                continue
+            for i in xrange(pNum):
+                try:
+                    key = self.val['arData'][i]['key']
+                    val = self.val['arData'][i]['val']
+                    _str += PHPZendStringPrinter(key).to_string() + " => "
+                    _str += PHPZvalPrinter(val).to_string() + "\n"
+                except:
+                    _str += "unknow";
+                    continue;
+        except:
+            return '(HashTable) 0x0?'
         
         return "(HashTable) " +  _str
     
